@@ -1,7 +1,22 @@
 # S2S Dynamics Based Bipedal Walking
 
-Slowly uploading the implementations on the S2S Dynamics based framework for controlling bipedal robotic walking. (cpp folder now contains basic examples of using the S2S based framework to generate walking outputs using H-LIP approximation and a QP based tracking controller)
+Slowly uploading the implementations on the S2S Dynamics based framework for controlling bipedal robotic walking. 
 
+ ### cpp folder now contains basic examples of using the S2S based framework with 
+ - a H-LIP class 
+ - walking outputs using H-LIP approximation 
+ - a QP based tracking controller
+ 
+ TODO: A full repo of using it to control Cassie in Mujoco will be uploaded soon. 
+ 
+ ### Matlab folder mainly contains a LIPapprox class (still un-organzied yet since it was research code) with controllers 
+ - Deadbeat, LQR, CLF, etc
+ - MPC, SLS
+ - Adaptive Controller
+ 
+ TODO: I will try to organize it in a better way. These linear controllers are relatively straight forward, some of which have been appeared in previous publications.
+
+---
 Most walking videos can be seen from the [youtube channel](https://www.youtube.com/channel/UC__Fnw5l_TQCIBIIrfKXBtA).
 
 Results of the S2S based framework: 
@@ -12,6 +27,7 @@ Results of the S2S based framework:
 - Push Rejection: [Sagittal](https://www.youtube.com/watch?v=MeaR__wgYyY), [Coronal](https://www.youtube.com/watch?v=_EqxuzywQWU)   
 - [Global Path Tracking](https://www.youtube.com/watch?v=06efo-U1mrw) 
 
+---
 [Paper (Brief)](https://arxiv.org/pdf/2101.09588.pdf):
 ```
 Xiaobin Xiong, and Aaron Ames. 
