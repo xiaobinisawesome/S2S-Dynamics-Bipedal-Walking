@@ -14,7 +14,7 @@ Slowly uploading the implementations on the S2S Dynamics based framework for con
  - MPC, SLS
  - Adaptive Controller
  
- TODO: I will try to organize it in a better way. These linear controllers are relatively straight forward, some of which have been appeared in previous publications.
+ TODO: I will try to organize it in a better way. These linear controllers are relatively straight forward, only some of which have been appeared in previous publications.
 
 ---
 Most walking videos can be seen from the [youtube channel](https://www.youtube.com/channel/UC__Fnw5l_TQCIBIIrfKXBtA).
