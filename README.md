@@ -1,6 +1,6 @@
 # S2S Dynamics Based Bipedal Walking
 
-Slowly uploading the implementations on the S2S Dynamics based framework for controlling bipedal robotic walking.
+Slowly uploading the implementations on the S2S Dynamics based framework for controlling bipedal robotic walking. (cpp folder now contains basic examples of using the S2S based framework to generate walking outputs using H-LIP approximation and a QP based tracking controller)
 
 Most walking videos can be seen from the [youtube channel](https://www.youtube.com/channel/UC__Fnw5l_TQCIBIIrfKXBtA).
 
