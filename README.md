@@ -32,7 +32,7 @@ Results of the S2S based framework:
 ```
 Xiaobin Xiong, and Aaron Ames. 
 3D underactuated bipedal walking via h-lip based gait synthesis and stepping stabilization.
-arXiv preprint arXiv:2101.09588 (2021).
+arXiv preprint arXiv:2101.09588, IEEE Transactions on Robotics (T-RO), 2022.
 ```
 
 [Thesis](https://thesis.library.caltech.edu/14230/1/Thesis__to_submit_0601.pdf)  
