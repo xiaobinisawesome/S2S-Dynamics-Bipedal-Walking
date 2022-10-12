@@ -1,23 +1,24 @@
 
 
-#include <cassie_controllers/HLIP.hpp> 
+#include <cassie_controllers/HLIP.hpp>
 #include <ros_utilities/ros_utilities.hpp>
 #include <cassie_common_toolbox/hyperbolic.hpp>
 #include <unsupported/Eigen/MatrixFunctions>
 
 using namespace Eigen;
 
+HLIP::HLIP(){};
 
-HLIP::HLIP() {};
-
-void HLIP::init(double z0, double Ts, double Td, int orbitPeriod, double vel, double stepwidth = 0) {
+void HLIP::init(double z0, double Ts, double Td, int orbitPeriod, double vel, double stepwidth = 0)
+{
 
     this->orbitPeriod = orbitPeriod;
     updateHLIP(z0, Ts, Td);
     updateDesiredWalking(vel, stepwidth);
 }
 
-void HLIP::updateHLIP(double z0, double Ts, double Td) {
+void HLIP::updateHLIP(double z0, double Ts, double Td)
+{
     params.z0 = z0;
     params.Ts = Ts;
     params.Td = Td;
@@ -25,10 +26,10 @@ void HLIP::updateHLIP(double z0, double Ts, double Td) {
     params.T = Ts + Td;
     params.lambda = sqrt(params.grav / params.z0);
 
-    // S2S dynamics 
+    // S2S dynamics
     MatrixXd eATs(2, 2);
     eATs << cosh(Ts * params.lambda), sinh(Ts * params.lambda) / params.lambda,
-        params.lambda* sinh(Ts * params.lambda), cosh(Ts * params.lambda);
+        params.lambda * sinh(Ts * params.lambda), cosh(Ts * params.lambda);
 
     VectorXd temp2(2);
     MatrixXd temp22(2, 2);
@@ -47,19 +48,22 @@ void HLIP::updateHLIP(double z0, double Ts, double Td) {
     p2.Kdeadbeat = Kdeadbeat;
 }
 
-void HLIP::updateDesiredWalking(double vel, double stepWidth) {
+void HLIP::updateDesiredWalking(double vel, double stepWidth)
+{
     // only p2 orbit need to update step width
     if (orbitPeriod == P2orbit)
-        p2.setP2orbitUleft(-stepWidth);  // left stance u is negative typically
+        p2.setP2orbitUleft(-stepWidth); // left stance u is negative typically
     setDesiredVelocity(vel);
 }
 
-void HLIP::setDesiredVelocity(double vel) {
+void HLIP::setDesiredVelocity(double vel)
+{
     params.velDes = vel;
 
     double DistSum = vel * params.T; // total traveled distance in SSPand DSP.
 
-    switch (orbitPeriod) {
+    switch (orbitPeriod)
+    {
     case P1orbit:
         double vxdes;
         vxdes = DistSum / (2 / p1.sigma1 + params.T);
@@ -68,15 +72,21 @@ void HLIP::setDesiredVelocity(double vel) {
         break;
     case P2orbit:
         p2.d2 = pow(params.lambda, 2) * pow((sech(params.lambda * params.Ts / 2)), 2) * params.velDes *
-            (params.Ts + params.Td) / (pow(params.lambda, 2) * params.Td + 2 * p2.sigma2);
+                (params.Ts + params.Td) / (pow(params.lambda, 2) * params.Td + 2 * p2.sigma2);
 
         double pleftdes, vleftdes;
-        pleftdes = p2.UleftDes / (2 + params.Td * p2.sigma2);
+        pleftdes = (p2.UleftDes - params.Td * p2.d2) / (2 + params.Td * p2.sigma2);
         vleftdes = p2.sigma2 * pleftdes + p2.d2;
 
         p2.XleftDes << pleftdes, vleftdes;
-        p2.XrightDes = get_LIPsol(params.Ts, params.z0, -pleftdes, vleftdes);
-        p2.UrightDes = p2.XrightDes(0) * 2 + p2.XrightDes(1) * params.Td;
+
+        // calculate the right stance base boundary states
+        p2.UrightDes = DistSum * 2 - p2.UleftDes;
+        double prightdes, vrightdes;
+        prightdes = (p2.UrightDes - params.Td * p2.d2) / (2 + params.Td * p2.sigma2);
+        vrightdes = p2.sigma2 * prightdes + p2.d2;
+        p2.XrightDes << prightdes, vrightdes;
+
         break;
     default:
         ROS_WARN("orbit type is wrong!");
@@ -84,21 +94,22 @@ void HLIP::setDesiredVelocity(double vel) {
     }
 }
 
-void HLIP::P2::setP2orbitUleft(double uLeftDes) {
+void HLIP::P2::setP2orbitUleft(double uLeftDes)
+{
     this->UleftDes = uLeftDes;
 }
 
-Vector2d HLIP::getDesiredStepSizeDeadbeat(double p, double v, int stanceLeg) {
-    Vector2d out = (orbitPeriod == P1orbit) ?
-        p1.getDeadbeatStepSize(p, v, params.lambda) :
-        p2.getDeadbeatStepSize(p, v, params.lambda, stanceLeg);
+Vector2d HLIP::getDesiredStepSizeDeadbeat(double p, double v, int stanceLeg)
+{
+    Vector2d out = (orbitPeriod == P1orbit) ? p1.getDeadbeatStepSize(p, v, params.lambda) : p2.getDeadbeatStepSize(p, v, params.lambda, stanceLeg);
     return out;
 };
 
-Vector2d HLIP::P1::getDeadbeatStepSize(double p, double v, double lambda) {
+Vector2d HLIP::P1::getDeadbeatStepSize(double p, double v, double lambda)
+{
     Vector2d Xnow, dXnow, Ustepsize;
     Xnow << p, v;
-    dXnow << v, pow(lambda, 2)* p;
+    dXnow << v, pow(lambda, 2) * p;
     double dstepLength = 0;
 
     double stepLength = Kdeadbeat.transpose() * (Xnow - this->Xdes) + this->Udes;
@@ -109,17 +120,18 @@ Vector2d HLIP::P1::getDeadbeatStepSize(double p, double v, double lambda) {
     return Ustepsize;
 }
 
-Vector2d HLIP::P2::getDeadbeatStepSize(double p, double v, double lambda, int stanceLegIdx) {
+Vector2d HLIP::P2::getDeadbeatStepSize(double p, double v, double lambda, int stanceLegIdx)
+{
 
     Vector2d Xnow, dXnow, Ustepsize;
     Xnow << p, v;
-    dXnow << v, pow(lambda, 2)* p;
+    dXnow << v, pow(lambda, 2) * p;
     double dstepLength = 0;
     double stepLength = 0;
 
     switch (stanceLegIdx)
     {
-    case leftStance: // left stance 
+    case leftStance: // left stance
         stepLength = Kdeadbeat.transpose() * (Xnow - XleftDes) + UleftDes;
         break;
     case rightStance:
@@ -134,12 +146,12 @@ Vector2d HLIP::P2::getDeadbeatStepSize(double p, double v, double lambda, int st
     return Ustepsize;
 }
 
-
 ///////////////////////////////// other LIP related helper functions ////////////////////////
-double HLIP::solve_Ts() {
+double HLIP::solve_Ts()
+{
     double Ts = 0;
 
-    ///////// TODO: what is this?
+    ///////// TODO: Time to impact.
     // double xcdes = this->param.xratio * this->param.ldes;
     // double lam = sqrt(this->config.g / this->cache.z0LIP);
     // double a = this->cache.xcLIP;
@@ -150,7 +162,8 @@ double HLIP::solve_Ts() {
     return Ts;
 }
 
-Vector2d HLIP::get_LIPsol(double t, double z0, double x0, double v0) {
+Vector2d HLIP::get_LIPsol(double t, double z0, double x0, double v0)
+{
 
     Vector2d sol;
 
@@ -165,10 +178,10 @@ Vector2d HLIP::get_LIPsol(double t, double z0, double x0, double v0) {
     return sol;
 }
 
-
-double HLIP::getOrbitalEnergy(double p, double Ly) {
-    // get the orbital energy in SSP 
+double HLIP::getOrbitalEnergy(double p, double Ly)
+{
+    // get the orbital energy in SSP
     // p is the postion w.r.t. contact pivot, Ly is the momentum about the contact pivot
-    return  pow(Ly / params.z0, 2) - params.grav /
-        params.z0 * pow(p, 2);
+    return pow(Ly / params.z0, 2) - params.grav /
+                                        params.z0 * pow(p, 2);
 }
